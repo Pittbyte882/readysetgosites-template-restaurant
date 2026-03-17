@@ -16,13 +16,22 @@ export function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    setIsSubmitting(false)
+  e.preventDefault()
+  setIsSubmitting(true)
+  try {
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    })
+    if (!res.ok) throw new Error("Failed")
     setIsSubmitted(true)
+  } catch (error) {
+    alert("Something went wrong. Please try again or call us directly.")
+  } finally {
+    setIsSubmitting(false)
   }
-
+}
   const borderColor = isDark ? "rgba(200,80,42,0.5)" : "#c8a882"
 
   const inputStyle = {
