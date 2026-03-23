@@ -4,117 +4,82 @@ import { siteConfig } from "@/config/site"
 export async function POST(request: Request) {
   try {
     const data = await request.json()
-    const {
-      name, email, phone, date,
-      time, guests, occasion, requests,
-    } = data
+    const { name, email, phone, date, time, party, occasion, requests } = data
 
-    const occasionLabels: Record<string, string> = {
-      birthday: "🎂 Birthday Celebration",
-      anniversary: "💑 Anniversary",
-      proposal: "💍 Marriage Proposal",
-      business: "💼 Business Dinner",
-      other: "✨ Other Special Occasion",
-    }
+    const agencyEmail = `
+NEW RESERVATION REQUEST — ${siteConfig.name}
+============================================
 
-    const occasionLabel = occasion
-      ? occasionLabels[occasion] || occasion
-      : "None"
+GUEST
+Name:   ${name}
+Email:  ${email}
+Phone:  ${phone}
 
-    // Email to restaurant owner
-    const ownerEmail = `
-NEW RESERVATION — ${siteConfig.name}
-=====================================
-
-GUEST DETAILS
-Name:    ${name}
-Email:   ${email}
-Phone:   ${phone || "Not provided"}
-
-RESERVATION DETAILS
-Date:      ${date}
-Time:      ${time}
-Guests:    ${guests}
-Occasion:  ${occasionLabel}
+BOOKING
+Date:        ${date}
+Time:        ${time}
+Party Size:  ${party}
+Occasion:    ${occasion || "Not specified"}
 
 SPECIAL REQUESTS
 ${requests || "None"}
 
-=====================================
-Sent from your website reservation form.
+============================================
+ACTION REQUIRED: Confirm this reservation within 2 hours.
     `
 
-    // Confirmation email to guest
     const guestEmail = `
 Dear ${name},
 
-Thank you for choosing ${siteConfig.name}!
+Thank you for your reservation request at ${siteConfig.name}.
 
-Your reservation request has been received and we will confirm
-your booking within the next few hours.
+RESERVATION DETAILS
+-------------------
+Date:       ${date}
+Time:       ${time}
+Party Size: ${party}
+${occasion ? `Occasion:   ${occasion}` : ""}
 
-YOUR RESERVATION DETAILS
--------------------------
-Date:      ${date}
-Time:      ${time}
-Guests:    ${guests}
-Occasion:  ${occasionLabel}
-
-${requests ? `Special Requests: ${requests}` : ""}
-
-If you need to make any changes or have questions please
-contact us at:
+We will confirm your reservation within 2 hours. If you need
+to modify or cancel, please contact us at:
 
 Phone: ${siteConfig.phone}
 Email: ${siteConfig.email}
 
-We look forward to welcoming you!
+We look forward to welcoming you.
 
-Warm regards,
-The Team at ${siteConfig.name}
+The Grand Table
 ${siteConfig.address}
+${siteConfig.city}
     `
 
-    const [ownerRes, guestRes] = await Promise.all([
+    await Promise.all([
       fetch("https://api.resend.com/emails", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
         body: JSON.stringify({
-          from: `${siteConfig.name} <${siteConfig.fromEmail}>`,
-          to: siteConfig.notifyEmail,
-          subject: `New Reservation — ${name} · ${date} at ${time} · ${guests} guests`,
-          text: ownerEmail,
+          from: `${siteConfig.name} <${process.env.FROM_EMAIL}>`,
+          to: process.env.NOTIFY_EMAIL,
+          subject: `Reservation Request — ${name} · ${date} · ${time} · ${party}`,
+          text: agencyEmail,
         }),
       }),
       fetch("https://api.resend.com/emails", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
         body: JSON.stringify({
-          from: `${siteConfig.name} <${siteConfig.fromEmail}>`,
-          reply_to: siteConfig.email,
+          from: `${siteConfig.name} <${process.env.FROM_EMAIL}>`,
+          reply_to: process.env.NOTIFY_EMAIL,
           to: email,
-          subject: `Reservation Received — ${siteConfig.name} · ${date} at ${time}`,
+          subject: `Reservation Request Received — ${siteConfig.name}`,
           text: guestEmail,
         }),
       }),
     ])
 
-    if (!ownerRes.ok || !guestRes.ok) {
-      throw new Error("Failed to send one or more emails")
-    }
-
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Reservation error:", error)
-    return NextResponse.json(
-      { error: "Failed to submit reservation" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed" }, { status: 500 })
   }
 }

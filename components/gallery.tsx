@@ -2,150 +2,182 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { siteConfig } from "@/config/site"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
 
-const images = [
-  { src: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80", alt: "Signature Dish", category: "Food" },
-  { src: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80", alt: "Restaurant Interior", category: "Interior" },
-  { src: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80", alt: "Chef at Work", category: "Kitchen" },
-  { src: "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80", alt: "Fine Dining Plate", category: "Food" },
-  { src: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80", alt: "Dining Room", category: "Interior" },
-  { src: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80", alt: "Artisan Pizza", category: "Food" },
-  { src: "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=800&q=80", alt: "Bar Area", category: "Interior" },
-  { src: "https://images.unsplash.com/photo-1476224203421-9ac39bcb3b28?w=800&q=80", alt: "Dessert Plate", category: "Food" },
-  { src: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80", alt: "Evening Ambiance", category: "Interior" },
-]
+const filters = ["All", "Food", "Atmosphere", "Wine", "Events"]
 
 export function Gallery() {
-  const [selectedImage, setSelectedImage] = useState<number | null>(null)
-  const [activeFilter, setActiveFilter] = useState("All")
+  const [active, setActive] = useState("All")
+  const [lightbox, setLightbox] = useState<number | null>(null)
 
-  const filters = ["All", "Food", "Interior", "Kitchen"]
-  const filtered = activeFilter === "All" ? images : images.filter(img => img.category === activeFilter)
+  const filtered = active === "All"
+    ? siteConfig.gallery
+    : siteConfig.gallery.filter(g => g.category === active)
 
-  const navigate = (direction: "prev" | "next") => {
-    if (selectedImage === null) return
-    if (direction === "prev") {
-      setSelectedImage(selectedImage === 0 ? filtered.length - 1 : selectedImage - 1)
-    } else {
-      setSelectedImage(selectedImage === filtered.length - 1 ? 0 : selectedImage + 1)
-    }
-  }
+  const prev = () => setLightbox(i => i !== null ? (i === 0 ? filtered.length - 1 : i - 1) : null)
+  const next = () => setLightbox(i => i !== null ? (i === filtered.length - 1 ? 0 : i + 1) : null)
 
   return (
-    <section id="gallery" className="py-24 px-6" style={{ background: "var(--secondary)" }}>
-      <div className="max-w-6xl mx-auto">
+    <>
+      <div className="divider-gold" />
+      <section
+        id="gallery"
+        style={{ minHeight: "100vh", background: "var(--bg-2)" }}
+        className="relative"
+      >
+        <div className="max-w-7xl mx-auto px-6 lg:px-20 pt-28 lg:pt-36 pb-28 lg:pb-36">
 
-        {/* Header */}
-        <div className="text-center mb-16">
-          <p
-            className="text-sm font-medium uppercase tracking-[0.3em] mb-3"
-            style={{ color: "var(--primary)", fontFamily: "var(--font-sans)" }}
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16"
           >
-            Visual Journey
-          </p>
-          <h2
-            className="text-5xl font-bold mb-4"
-            style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}
-          >
-            Our Gallery
-          </h2>
-          <div className="w-16 h-0.5 mx-auto" style={{ background: "var(--primary)" }} />
-        </div>
-
-        {/* Filter */}
-        <div className="flex items-center justify-center gap-2 mb-10 flex-wrap">
-          {filters.map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className="px-5 py-2 rounded-full text-sm font-medium transition-all"
+            <span
+              className="block text-[100px] leading-none font-bold mb-4 select-none"
               style={{
-                background: activeFilter === filter ? "var(--primary)" : "var(--card)",
-                color: activeFilter === filter ? "var(--primary-foreground)" : "var(--muted-foreground)",
-                border: `1px solid var(--border)`,
-                fontFamily: "var(--font-sans)",
+                color: "transparent",
+                WebkitTextStroke: "1px rgba(201,169,110,0.12)",
+                fontFamily: "var(--font-display, Georgia, serif)",
               }}
             >
-              {filter}
-            </button>
-          ))}
-        </div>
+              04
+            </span>
 
-        {/* Grid */}
-        <motion.div layout className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {filtered.map((image, i) => (
-            <motion.div
-              key={image.src}
-              layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className={`relative overflow-hidden rounded-2xl cursor-pointer group ${
-                i === 0 ? "md:col-span-2 md:row-span-2" : ""
-              }`}
-              style={{ aspectRatio: i === 0 ? "auto" : "1" }}
-              onClick={() => setSelectedImage(i)}
-            >
-              <img
-                src={image.src}
-                alt={image.alt}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                style={{ minHeight: i === 0 ? "400px" : "200px" }}
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
-                <span
-                  className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity text-sm"
-                  style={{ fontFamily: "var(--font-sans)" }}
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-xs tracking-[0.3em] uppercase mb-4" style={{ color: "var(--gold)" }}>
+                  Gallery
+                </p>
+                <h2
+                  className="font-light leading-tight"
+                  style={{
+                    fontFamily: "var(--font-display, Georgia, serif)",
+                    color: "var(--fg)",
+                    fontSize: "clamp(2.5rem, 4vw, 3.8rem)",
+                  }}
                 >
-                  {image.alt}
-                </span>
+                  In the moment.
+                </h2>
               </div>
-            </motion.div>
-          ))}
-        </motion.div>
+
+              {/* Filters */}
+              <div className="flex flex-wrap gap-3 mt-8 lg:mt-0">
+                {filters.map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setActive(f)}
+                    className="text-xs tracking-[0.15em] uppercase px-5 py-2.5 transition-all"
+                    style={{
+                      border: "1px solid",
+                      borderColor: active === f ? "var(--gold)" : "var(--border)",
+                      color: active === f ? "var(--gold)" : "var(--fg-muted)",
+                      background: active === f ? "rgba(201,169,110,0.06)" : "transparent",
+                    }}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Masonry grid */}
+          <div className="masonry">
+            {filtered.map((item, i) => (
+              <motion.div
+                key={item.src + i}
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+                className="masonry-item cursor-pointer group relative overflow-hidden"
+                onClick={() => setLightbox(i)}
+              >
+                <img
+                  src={item.src}
+                  alt={item.alt}
+                  className="w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  style={{ display: "block" }}
+                />
+                <div
+                  className="absolute inset-0 flex items-end p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: "linear-gradient(to top, rgba(10,8,4,0.8) 0%, transparent 60%)" }}
+                >
+                  <div>
+                    <p className="text-xs tracking-[0.15em] uppercase" style={{ color: "var(--gold)" }}>
+                      {item.category}
+                    </p>
+                    <p className="text-sm" style={{ color: "var(--fg)" }}>{item.alt}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
 
         {/* Lightbox */}
         <AnimatePresence>
-          {selectedImage !== null && (
+          {lightbox !== null && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              style={{ background: "rgba(0,0,0,0.95)" }}
-              onClick={() => setSelectedImage(null)}
+              className="fixed inset-0 z-50 flex items-center justify-center"
+              style={{ background: "rgba(10,8,4,0.96)" }}
+              onClick={() => setLightbox(null)}
             >
+              <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.95 }}
+                onClick={e => e.stopPropagation()}
+                className="relative max-w-4xl w-full mx-6"
+              >
+                <img
+                  src={filtered[lightbox]?.src}
+                  alt={filtered[lightbox]?.alt}
+                  className="w-full max-h-[80vh] object-contain"
+                />
+                <div className="flex items-center justify-between mt-4 px-2">
+                  <p className="text-sm" style={{ color: "var(--fg-muted)" }}>
+                    {filtered[lightbox]?.alt}
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--fg-dim)" }}>
+                    {lightbox + 1} / {filtered.length}
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Controls */}
               <button
-                className="absolute top-4 right-4 p-2 rounded-full text-white hover:bg-white/10 transition-colors"
-                onClick={() => setSelectedImage(null)}
+                onClick={(e) => { e.stopPropagation(); prev() }}
+                className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center transition-all hover:opacity-70"
+                style={{ border: "1px solid var(--border)", color: "var(--fg)" }}
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); next() }}
+                className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center transition-all hover:opacity-70"
+                style={{ border: "1px solid var(--border)", color: "var(--fg)" }}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setLightbox(null)}
+                className="absolute top-6 right-6"
+                style={{ color: "var(--fg-muted)" }}
               >
                 <X className="w-6 h-6" />
-              </button>
-              <button
-                className="absolute left-4 p-2 rounded-full text-white hover:bg-white/10 transition-colors"
-                onClick={(e) => { e.stopPropagation(); navigate("prev") }}
-              >
-                <ChevronLeft className="w-8 h-8" />
-              </button>
-              <motion.img
-                key={selectedImage}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                src={filtered[selectedImage].src}
-                alt={filtered[selectedImage].alt}
-                className="max-w-4xl max-h-[85vh] w-full object-contain rounded-2xl"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <button
-                className="absolute right-4 p-2 rounded-full text-white hover:bg-white/10 transition-colors"
-                onClick={(e) => { e.stopPropagation(); navigate("next") }}
-              >
-                <ChevronRight className="w-8 h-8" />
               </button>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-    </section>
+      </section>
+    </>
   )
 }

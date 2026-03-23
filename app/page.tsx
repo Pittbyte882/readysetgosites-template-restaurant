@@ -1,16 +1,15 @@
-import { ThemeProvider } from "@/lib/theme-context"
-import { ThemeSwitcher } from "@/components/theme-switcher"
 import { Navbar } from "@/components/navbar"
 import { Hero } from "@/components/hero"
-import { Menu } from "@/components/menu"
-import { About } from "@/components/about"
-import { Reservation } from "@/components/reservation"
+import { Experience } from "@/components/experience"
+import { MenuSection } from "@/components/menu-section"
+import { PhotoBreak } from "@/components/photo-break"
+import { Reservations } from "@/components/reservation"
 import { Gallery } from "@/components/gallery"
 import { Testimonials } from "@/components/testimonials"
 import { Events } from "@/components/events"
 import { Location } from "@/components/location"
-import { Contact } from "@/components/contact"
 import { Footer } from "@/components/footer"
+import { ThemeProvider, ThemeSwitcher } from "@/components/theme-switcher"
 
 export default function Home() {
   return (
@@ -18,16 +17,16 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <Menu />
-        <About />
-        <Reservation />
+        <Experience />
+        <MenuSection />
+        <PhotoBreak />
+        <Reservations />
         <Gallery />
         <Testimonials />
         <Events />
         <Location />
-        <Contact />
-        <Footer />
       </main>
+      <Footer />
       <ThemeSwitcher />
     </ThemeProvider>
   )

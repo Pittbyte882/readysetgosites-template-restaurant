@@ -2,310 +2,542 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Calendar, Clock, Users, Check, Phone, ChevronDown, Sparkles } from "lucide-react"
-import { useTheme } from "@/lib/theme-context"
+import { siteConfig } from "@/config/site"
+import { Check } from "lucide-react"
 
-export function Reservation() {
-  const { theme } = useTheme()
-  const isDark = theme === "modern" || theme === "bold"
+const times = ["5:00 PM","5:30 PM","6:00 PM","6:30 PM","7:00 PM","7:30 PM","8:00 PM","8:30 PM","9:00 PM","9:30 PM"]
+const partySizes = Array.from({ length: 10 }, (_, i) => `${i + 1} Guest${i > 0 ? "s" : ""}`)
+const occasions = ["Birthday", "Anniversary", "Business Dinner", "Date Night", "Special Occasion", "Other"]
 
-  const [formData, setFormData] = useState({
+export function Reservations() {
+  const [form, setForm] = useState({
     name: "", email: "", phone: "",
-    date: "", time: "", guests: "2",
-    occasion: "", requests: "",
+    date: "", time: "", party: "", occasion: "", requests: "",
   })
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const timeSlots = [
-    "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM",
-    "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM",
-  ]
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setIsSubmitting(true)
-  try {
-    const res = await fetch("/api/reservation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    })
-    if (!res.ok) throw new Error("Failed")
-    setIsSubmitted(true)
-  } catch (error) {
-    alert("Something went wrong. Please call us directly at (555) 123-4567")
-  } finally {
-    setIsSubmitting(false)
-  }
-}
-  const borderColor = isDark ? "rgba(200,80,42,0.5)" : "#c8a882"
-
-  const inputStyle = {
-    background: isDark ? "rgba(255,255,255,0.05)" : "#ffffff",
-    border: "1.5px solid var(--border)",
-    color: "var(--foreground)",
-    fontFamily: "var(--font-sans)",
-    fontSize: "14px",
-    width: "100%",
-    padding: "14px 16px",
-    borderRadius: "12px",
-    outline: "none",
-    transition: "border-color 0.2s",
-  }
-
-  const labelStyle = {
-    display: "block",
-    fontSize: "11px",
-    fontWeight: "700",
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.12em",
-    marginBottom: "8px",
-    color: "var(--muted-foreground)",
-    fontFamily: "var(--font-sans)",
-  }
-
-  if (isSubmitted) {
-    return (
-      <section id="reservation" className="py-28" style={{ background: isDark ? "var(--background)" : "var(--secondary)" }}>
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="overflow-hidden rounded-3xl"
-            style={{ border: `2px solid ${borderColor}` }}
-          >
-            <div className="h-2" style={{ background: "var(--primary)" }} />
-            <div className="p-16" style={{ background: isDark ? "var(--background)" : "#fefcf8" }}>
-              <div className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8" style={{ background: "var(--primary)" }}>
-                <Check className="w-12 h-12" style={{ color: "var(--primary-foreground)" }} />
-              </div>
-              <h3 className="text-4xl font-bold mb-4" style={{ color: "var(--foreground)", fontFamily: "var(--font-serif)" }}>
-                You&apos;re Confirmed!
-              </h3>
-              <p className="text-base leading-relaxed mb-3" style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}>
-                Thank you, <strong style={{ color: "var(--foreground)" }}>{formData.name}</strong>.
-                Your table is reserved for{" "}
-                <strong style={{ color: "var(--primary)" }}>{formData.date}</strong> at{" "}
-                <strong style={{ color: "var(--primary)" }}>{formData.time}</strong> for{" "}
-                <strong style={{ color: "var(--primary)" }}>{formData.guests} guests</strong>.
-              </p>
-              <p className="text-sm" style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}>
-                Confirmation sent to <strong style={{ color: "var(--primary)" }}>{formData.email}</strong>
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-    )
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await fetch("/api/reservation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      if (!res.ok) throw new Error()
+      setSubmitted(true)
+    } catch {
+      alert(`Something went wrong. Please call us at ${siteConfig.phone}`)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <section id="reservation" style={{ background: isDark ? "var(--background)" : "var(--secondary)" }}>
-
-      {/* Full width hero banner */}
-      <div
-        className="relative w-full h-64 flex items-center justify-center overflow-hidden"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=80')`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+    <>
+      <div className="divider-gold" />
+      <section
+        id="reservations"
+        className="relative overflow-hidden"
+        style={{ minHeight: "100vh", background: "var(--bg)" }}
       >
-        <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.65)" }} />
-        <div className="relative z-10 text-center px-6">
-          <p className="text-xs font-bold uppercase tracking-[0.4em] mb-3" style={{ color: "var(--accent)", fontFamily: "var(--font-sans)" }}>
-            Join Us
-          </p>
-          <h2 className="text-5xl md:text-6xl font-bold text-white" style={{ fontFamily: "var(--font-serif)" }}>
-            Reserve Your Table
-          </h2>
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <div className="h-px w-16 bg-white/30" />
-            <div className="w-1.5 h-1.5 rounded-full bg-white/60" />
-            <div className="h-px w-16 bg-white/30" />
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-6 py-20">
-
-        {/* Info strip */}
+        {/* Background diagonal pattern */}
         <div
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-14 p-6 rounded-2xl"
+          className="absolute inset-0"
           style={{
-            background: isDark ? "rgba(255,255,255,0.03)" : "#ffffff",
-            border: `1px solid ${borderColor}`,
+            backgroundImage: "repeating-linear-gradient(135deg, rgba(201,169,110,0.03) 0px, rgba(201,169,110,0.03) 1px, transparent 1px, transparent 40px)",
+            backgroundSize: "56px 56px",
           }}
+        />
+
+        {/* Gold glow top */}
+        <div
+          className="absolute top-0 left-0 right-0 h-1"
+          style={{ background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }}
+        />
+
+        <div
+          className="relative z-10 max-w-7xl mx-auto"
+          style={{ padding: "7rem 4rem" }}
         >
-          {[
-            { icon: Clock, title: "Dinner Service", subtitle: "Wed – Sun · 5:00 PM – 11:00 PM" },
-            { icon: Phone, title: "Reservations", subtitle: "(555) 123-4567" },
-            { icon: Users, title: "Private Dining", subtitle: "Groups of 9+ call directly" },
-            { icon: Sparkles, title: "Dress Code", subtitle: "Smart casual to formal" },
-          ].map((item) => (
-            <div key={item.title} className="flex items-start gap-3">
-              <div className="p-2 rounded-lg flex-shrink-0" style={{ background: "var(--primary)" }}>
-                <item.icon className="w-4 h-4" style={{ color: "var(--primary-foreground)" }} />
-              </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}>
-                  {item.title}
-                </p>
-                <p className="text-sm font-medium mt-0.5" style={{ color: "var(--foreground)", fontFamily: "var(--font-sans)" }}>
-                  {item.subtitle}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+          <div className="grid lg:grid-cols-5 gap-16 items-start">
 
-        {/* Form Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="overflow-hidden rounded-3xl"
-          style={{ border: `2px solid ${borderColor}` }}
-        >
-          {/* Corner ornaments */}
-          <div className="relative">
-            <div className="h-2 w-full" style={{ background: "var(--primary)" }} />
-          </div>
-
-          <div className="p-10 md:p-16" style={{ background: isDark ? "var(--background)" : "#fefcf8" }}>
-
-            <div className="grid lg:grid-cols-2 gap-16">
-
-              {/* Left column */}
-              <div className="space-y-8">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest mb-6 flex items-center gap-3" style={{ color: "var(--primary)", fontFamily: "var(--font-sans)" }}>
-                    <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
-                    Your Details
-                    <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
-                  </p>
-                  <div className="space-y-5">
-                    <div>
-                      <label style={labelStyle}>Full Name <span style={{ color: "var(--primary)" }}>*</span></label>
-                      <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="John & Jane Smith" style={inputStyle} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Email Address <span style={{ color: "var(--primary)" }}>*</span></label>
-                      <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="john@example.com" style={inputStyle} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Phone Number</label>
-                      <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="(555) 123-4567" style={inputStyle} />
-                    </div>
-                    <div className="relative">
-                      <label style={labelStyle}>
-                        <span className="flex items-center gap-1.5">
-                          <Users className="w-3 h-3" style={{ color: "var(--primary)" }} />
-                          Number of Guests <span style={{ color: "var(--primary)" }}>*</span>
-                        </span>
-                      </label>
-                      <select required value={formData.guests} onChange={(e) => setFormData({ ...formData, guests: e.target.value })} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
-                        {[1,2,3,4,5,6,7,8].map(n => (
-                          <option key={n} value={n}>{n} {n === 1 ? "Guest" : "Guests"}</option>
-                        ))}
-                        <option value="9+">9+ Guests — Private Dining</option>
-                      </select>
-                      <ChevronDown className="absolute right-4 bottom-4 w-4 h-4 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right column */}
-              <div className="space-y-8">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest mb-6 flex items-center gap-3" style={{ color: "var(--primary)", fontFamily: "var(--font-sans)" }}>
-                    <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
-                    Booking Details
-                    <span className="flex-1 h-px" style={{ background: "var(--border)" }} />
-                  </p>
-                  <div className="space-y-5">
-                    <div>
-                      <label style={labelStyle}>
-                        <span className="flex items-center gap-1.5">
-                          <Calendar className="w-3 h-3" style={{ color: "var(--primary)" }} />
-                          Preferred Date <span style={{ color: "var(--primary)" }}>*</span>
-                        </span>
-                      </label>
-                      <input type="date" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} style={inputStyle} />
-                    </div>
-                    <div className="relative">
-                      <label style={labelStyle}>
-                        <span className="flex items-center gap-1.5">
-                          <Clock className="w-3 h-3" style={{ color: "var(--primary)" }} />
-                          Preferred Time <span style={{ color: "var(--primary)" }}>*</span>
-                        </span>
-                      </label>
-                      <select required value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
-                        <option value="" disabled>Select a time slot</option>
-                        {timeSlots.map(slot => (
-                          <option key={slot} value={slot}>{slot}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-4 bottom-4 w-4 h-4 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                    </div>
-                    <div className="relative">
-                      <label style={labelStyle}>Special Occasion</label>
-                      <select value={formData.occasion} onChange={(e) => setFormData({ ...formData, occasion: e.target.value })} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
-                        <option value="">None / Regular Dining</option>
-                        <option value="birthday">🎂 Birthday Celebration</option>
-                        <option value="anniversary">💑 Anniversary</option>
-                        <option value="proposal">💍 Marriage Proposal</option>
-                        <option value="business">💼 Business Dinner</option>
-                        <option value="other">✨ Other Special Occasion</option>
-                      </select>
-                      <ChevronDown className="absolute right-4 bottom-4 w-4 h-4 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Special Requests / Dietary Needs</label>
-                      <textarea value={formData.requests} onChange={(e) => setFormData({ ...formData, requests: e.target.value })} placeholder="Allergies, seating preferences, special arrangements..." rows={4} style={{ ...inputStyle, resize: "none" as const }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Note */}
-            <div className="mt-10 mb-8 flex items-start gap-3 p-5 rounded-xl" style={{ background: isDark ? "rgba(200,80,42,0.08)" : "rgba(200,136,82,0.06)", borderLeft: "3px solid var(--primary)" }}>
-              <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--primary)" }} />
-              <p className="text-xs leading-relaxed" style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}>
-                For parties of <strong style={{ color: "var(--foreground)" }}>9 or more</strong>, private events, or same-day reservations, please call us at{" "}
-                <strong style={{ color: "var(--foreground)" }}>(555) 123-4567</strong>.
-                We&apos;ll do our absolute best to accommodate you.
-              </p>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting || !formData.name || !formData.email || !formData.date || !formData.time}
-              className="w-full py-5 rounded-full font-bold text-sm uppercase tracking-widest transition-all hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
-              style={{
-                background: "var(--primary)",
-                color: "var(--primary-foreground)",
-                fontFamily: "var(--font-sans)",
-                letterSpacing: "0.2em",
-                fontSize: "13px",
-              }}
+            {/* Left — Info column */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="lg:col-span-2"
+              style={{ paddingTop: "1rem" }}
             >
-              {isSubmitting ? "Confirming Your Reservation..." : "Confirm Reservation →"}
-            </button>
+              {/* Section number */}
+              <div
+                className="leading-none font-bold select-none mb-8"
+                style={{
+                  fontSize: "7rem",
+                  color: "transparent",
+                  WebkitTextStroke: "1px rgba(201,169,110,0.12)",
+                  fontFamily: "var(--font-display, Georgia, serif)",
+                }}
+              >
+                03
+              </div>
 
-            <p className="text-center text-xs mt-4" style={{ color: "var(--muted-foreground)", fontFamily: "var(--font-sans)" }}>
-              Confirmation email sent within minutes · Free cancellation up to 24 hours before
-            </p>
+              <p
+                className="text-xs tracking-[0.3em] uppercase mb-5"
+                style={{ color: "var(--gold)" }}
+              >
+                Reservations
+              </p>
+
+              <h2
+                className="font-light leading-tight mb-8"
+                style={{
+                  fontFamily: "var(--font-display, Georgia, serif)",
+                  color: "var(--fg)",
+                  fontSize: "clamp(2.2rem, 3.5vw, 3.4rem)",
+                }}
+              >
+                Reserve your
+                <br />
+                <em style={{ color: "var(--gold)" }}>table.</em>
+              </h2>
+
+              <p
+                className="text-sm leading-loose mb-10"
+                style={{ color: "var(--fg-muted)", maxWidth: "340px" }}
+              >
+                Reservations accepted up to 60 days in advance. For parties of 8 or more, please contact us directly. Tables held for 15 minutes.
+              </p>
+
+              {/* Hours */}
+              <div className="mb-10">
+                <p
+                  className="text-xs tracking-[0.2em] uppercase mb-5"
+                  style={{
+                    color: "var(--gold)",
+                    borderBottom: "1px solid var(--border)",
+                    paddingBottom: "12px",
+                  }}
+                >
+                  Hours
+                </p>
+                <div className="space-y-4">
+                  {siteConfig.hours.map((h) => (
+                    <div key={h.day} className="flex justify-between items-baseline">
+                      <span className="text-sm" style={{ color: "var(--fg-muted)" }}>{h.day}</span>
+                      <span
+                        className="text-sm"
+                        style={{
+                          color: h.hours === "Closed" ? "var(--fg-dim)" : "var(--fg)",
+                          fontFamily: "var(--font-display, Georgia, serif)",
+                        }}
+                      >
+                        {h.hours}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div>
+                <p className="text-xs tracking-[0.2em] uppercase mb-3" style={{ color: "var(--fg-muted)" }}>
+                  Large parties & private events
+                </p>
+                <a
+                  href={`tel:${siteConfig.phone}`}
+                  className="transition-opacity hover:opacity-70"
+                  style={{
+                    color: "var(--gold)",
+                    fontFamily: "var(--font-display, Georgia, serif)",
+                    fontStyle: "italic",
+                    fontSize: "1.3rem",
+                    display: "block",
+                  }}
+                >
+                  {siteConfig.phone}
+                </a>
+              </div>
+            </motion.div>
+
+            {/* Right — Framed form */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="lg:col-span-3"
+            >
+              {/* Outer gold frame */}
+              <div
+                className="relative"
+                style={{
+                  border: "1px solid rgba(201,169,110,0.4)",
+                  background: "rgba(20,16,8,0.95)",
+                  boxShadow: "0 40px 120px rgba(0,0,0,0.6), inset 0 0 60px rgba(201,169,110,0.03)",
+                }}
+              >
+                {/* Corner ornaments */}
+                {[
+                  { top: "-1px", left: "-1px", borderWidth: "2px 0 0 2px" },
+                  { top: "-1px", right: "-1px", borderWidth: "2px 2px 0 0" },
+                  { bottom: "-1px", left: "-1px", borderWidth: "0 0 2px 2px" },
+                  { bottom: "-1px", right: "-1px", borderWidth: "0 2px 2px 0" },
+                ].map((style, i) => (
+                  <div
+                    key={i}
+                    className="absolute pointer-events-none"
+                    style={{
+                      ...style,
+                      width: "24px",
+                      height: "24px",
+                      borderStyle: "solid",
+                      borderColor: "var(--gold)",
+                    }}
+                  />
+                ))}
+
+                {/* Gold top bar */}
+                <div
+                  style={{
+                    height: "3px",
+                    background: "linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light), var(--gold), var(--gold-dark))",
+                  }}
+                />
+
+                {/* Form header */}
+                <div
+                  className="text-center py-8 px-10"
+                  style={{ borderBottom: "1px solid rgba(201,169,110,0.15)" }}
+                >
+                  <p
+                    className="text-xs tracking-[0.4em] uppercase"
+                    style={{ color: "var(--gold)" }}
+                  >
+                    ✦ Make a Reservation ✦
+                  </p>
+                </div>
+
+                {submitted ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-24 px-10"
+                  >
+                    <div
+                      className="w-16 h-16 flex items-center justify-center mx-auto mb-8"
+                      style={{ border: "1px solid var(--gold)" }}
+                    >
+                      <Check className="w-7 h-7" style={{ color: "var(--gold)" }} />
+                    </div>
+                    <h3
+                      className="text-3xl font-light mb-4"
+                      style={{
+                        fontFamily: "var(--font-display, Georgia, serif)",
+                        color: "var(--fg)",
+                      }}
+                    >
+                      Reservation Confirmed
+                    </h3>
+                    <p className="text-sm leading-relaxed mb-2" style={{ color: "var(--fg-muted)" }}>
+                      Thank you, <span style={{ color: "var(--fg)" }}>{form.name}</span>.
+                      We look forward to welcoming you.
+                    </p>
+                    <p className="text-sm" style={{ color: "var(--fg-muted)" }}>
+                      A confirmation has been sent to{" "}
+                      <span style={{ color: "var(--gold)" }}>{form.email}</span>
+                    </p>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleSubmit} style={{ padding: "2.5rem 3rem 3rem" }}>
+
+                    {/* Section label */}
+                    <p
+                      className="text-xs tracking-[0.3em] uppercase mb-6"
+                      style={{
+                        color: "var(--fg-muted)",
+                        borderBottom: "1px solid rgba(201,169,110,0.12)",
+                        paddingBottom: "10px",
+                      }}
+                    >
+                      Your Details
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-8 mb-8">
+                      <FieldGroup label="Full Name" required>
+                        <FormInput
+                          type="text"
+                          value={form.name}
+                          onChange={v => set("name", v)}
+                          placeholder="Your full name"
+                          required
+                        />
+                      </FieldGroup>
+                      <FieldGroup label="Email" required>
+                        <FormInput
+                          type="email"
+                          value={form.email}
+                          onChange={v => set("email", v)}
+                          placeholder="your@email.com"
+                          required
+                        />
+                      </FieldGroup>
+                      <FieldGroup label="Phone Number" required className="col-span-2">
+                        <FormInput
+                          type="tel"
+                          value={form.phone}
+                          onChange={v => set("phone", v)}
+                          placeholder={siteConfig.phone}
+                          required
+                        />
+                      </FieldGroup>
+                    </div>
+
+                    <p
+                      className="text-xs tracking-[0.3em] uppercase mb-6"
+                      style={{
+                        color: "var(--fg-muted)",
+                        borderBottom: "1px solid rgba(201,169,110,0.12)",
+                        paddingBottom: "10px",
+                      }}
+                    >
+                      Booking Details
+                    </p>
+
+                    <div className="grid grid-cols-3 gap-x-6 gap-y-8 mb-8">
+                      <FieldGroup label="Date" required>
+                        <FormInput
+                          type="date"
+                          value={form.date}
+                          onChange={v => set("date", v)}
+                          required
+                        />
+                      </FieldGroup>
+                      <FieldGroup label="Time" required>
+                        <FormSelect
+                          value={form.time}
+                          onChange={v => set("time", v)}
+                          options={times}
+                          placeholder="Select time"
+                          required
+                        />
+                      </FieldGroup>
+                      <FieldGroup label="Party Size" required>
+                        <FormSelect
+                          value={form.party}
+                          onChange={v => set("party", v)}
+                          options={partySizes}
+                          placeholder="Select size"
+                          required
+                        />
+                      </FieldGroup>
+                    </div>
+
+                    <p
+                      className="text-xs tracking-[0.3em] uppercase mb-6"
+                      style={{
+                        color: "var(--fg-muted)",
+                        borderBottom: "1px solid rgba(201,169,110,0.12)",
+                        paddingBottom: "10px",
+                      }}
+                    >
+                      Special Details
+                    </p>
+
+                    <div className="space-y-8 mb-10">
+                      <FieldGroup label="Occasion">
+                        <FormSelect
+                          value={form.occasion}
+                          onChange={v => set("occasion", v)}
+                          options={occasions}
+                          placeholder="Select occasion (optional)"
+                        />
+                      </FieldGroup>
+                      <FieldGroup label="Special Requests or Dietary Requirements">
+                        <textarea
+                          value={form.requests}
+                          onChange={e => set("requests", e.target.value)}
+                          placeholder="Allergies, dietary restrictions, celebration notes, seating preferences..."
+                          rows={4}
+                          style={{
+                            width: "100%",
+                            background: "rgba(255,255,255,0.03)",
+                            border: "1px solid rgba(201,169,110,0.15)",
+                            borderBottom: "1px solid rgba(201,169,110,0.4)",
+                            color: "var(--fg)",
+                            padding: "14px 16px",
+                            fontSize: "14px",
+                            fontFamily: "inherit",
+                            outline: "none",
+                            resize: "none",
+                            transition: "border-color 0.3s",
+                          }}
+                        />
+                      </FieldGroup>
+                    </div>
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-5 text-sm tracking-[0.3em] uppercase font-semibold transition-all hover:opacity-90 disabled:opacity-40"
+                      style={{
+                        background: "linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light), var(--gold))",
+                        color: "var(--bg)",
+                        letterSpacing: "0.3em",
+                      }}
+                    >
+                      {loading ? "Confirming..." : "✦  Confirm Reservation  ✦"}
+                    </button>
+
+                    <p
+                      className="text-center text-xs mt-5"
+                      style={{ color: "var(--fg-dim)" }}
+                    >
+                      We confirm within 2 hours · Same-day bookings please call directly
+                    </p>
+                  </form>
+                )}
+
+                {/* Gold bottom bar */}
+                <div
+                  style={{
+                    height: "3px",
+                    background: "linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light), var(--gold), var(--gold-dark))",
+                  }}
+                />
+              </div>
+            </motion.div>
           </div>
-
-          <div className="h-2 w-full" style={{ background: "var(--primary)" }} />
-        </motion.div>
-      </div>
-    </section>
+        </div>
+      </section>
+    </>
   )
 }
+
+/* ── Helper components ── */
+
+function FieldGroup({
+  label,
+  required,
+  children,
+  className = "",
+}: {
+  label: string
+  required?: boolean
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={className}>
+      <label
+        style={{
+          display: "block",
+          fontSize: "10px",
+          letterSpacing: "0.2em",
+          textTransform: "uppercase",
+          color: "var(--gold)",
+          marginBottom: "10px",
+          fontFamily: "inherit",
+        }}
+      >
+        {label}
+        {required && (
+          <span style={{ color: "var(--gold)", marginLeft: "4px" }}>*</span>
+        )}
+      </label>
+      {children}
+    </div>
+  )
+}
+
+function FormInput({
+  type,
+  value,
+  onChange,
+  placeholder,
+  required,
+}: {
+  type: string
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+  required?: boolean
+}) {
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      required={required}
+      style={{
+        width: "100%",
+        background: "rgba(255,255,255,0.03)",
+        border: "none",
+        borderBottom: "1px solid rgba(201,169,110,0.3)",
+        color: "var(--fg)",
+        padding: "12px 0",
+        fontSize: "15px",
+        fontFamily: "inherit",
+        outline: "none",
+        transition: "border-color 0.3s",
+        colorScheme: "dark",
+      }}
+      onFocus={e => (e.target.style.borderBottomColor = "var(--gold)")}
+      onBlur={e => (e.target.style.borderBottomColor = "rgba(201,169,110,0.3)")}
+    />
+  )
+}
+
+function FormSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  required,
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: string[]
+  placeholder?: string
+  required?: boolean
+}) {
+  return (
+    <select
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      required={required}
+      style={{
+        width: "100%",
+        background: "rgba(10,8,4,0.8)",
+        border: "none",
+        borderBottom: "1px solid rgba(201,169,110,0.3)",
+        color: value ? "var(--fg)" : "var(--fg-dim)",
+        padding: "12px 0",
+        fontSize: "15px",
+        fontFamily: "inherit",
+        outline: "none",
+        cursor: "pointer",
+        transition: "border-color 0.3s",
+        appearance: "none",
+      }}
+      onFocus={e => (e.target.style.borderBottomColor = "var(--gold)")}
+      onBlur={e => (e.target.style.borderBottomColor = "rgba(201,169,110,0.3)")}
+    >
+      <option value="" style={{ background: "#0a0804" }}>
+        {placeholder}
+      </option>
+      {options.map(o => (
+        <option key={o} value={o} style={{ background: "#0a0804" }}>
+          {o}
+        </option>
+      ))}
+    </select>
+  )
+}
+
